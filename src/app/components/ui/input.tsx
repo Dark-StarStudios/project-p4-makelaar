@@ -34,7 +34,7 @@ export default function Input({
         placeholder={placeholder}
         onChange={onChange}
         className="
-          h-20
+          h-[99px]
           w-full
           rounded-[9px]
           border-0
