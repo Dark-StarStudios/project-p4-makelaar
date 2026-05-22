@@ -1,4 +1,6 @@
-function Button({ children }: { children: React.ReactNode }) {
-  return <button className="button bg-amber-600">{children}</button>
+
+
+function Button({ children , className }: { children: React.ReactNode; className?: string }) {
+  return <button className={`button ${className}`}>{children}</button>
 }
 export default Button
