@@ -36,7 +36,7 @@ export default function Input({
         className="
           h-20
           w-full
-          rounded-2xl
+          rounded-[9px]
           border-0
           bg-white
           px-5
