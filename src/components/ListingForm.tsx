@@ -33,6 +33,23 @@ function SelectField({ name, label, defaultValue, max }: { name: string; label: 
   );
 }
 
+function getOrderedImageItems(images: string[], imageIDs: string[], selectedIndex: number) {
+  const items = images.map((image, index) => ({
+    image,
+    imageID: imageIDs[index]
+  }));
+
+  if (selectedIndex <= 0 || selectedIndex >= items.length) return items;
+
+  const nextItems = [...items];
+  const [selectedItem] = nextItems.splice(selectedIndex, 1);
+  return [selectedItem, ...nextItems];
+}
+
+function getValidImageIDs(items: { image: string; imageID?: string }[]) {
+  return items.map((item) => item.imageID).filter((imageID): imageID is string => Boolean(imageID));
+}
+
 export function ListingForm({ mode }: { mode: "new" | "edit" }) {
   const [listing, setListing] = useState<AppListing | null>(null);
   const [images, setImages] = useState<string[]>(["/images/house-exterior.png"]);
@@ -81,12 +98,20 @@ export function ListingForm({ mode }: { mode: "new" | "edit" }) {
     }
   }
 
-  function removeImage(index: number) {
-    const nextImages = images.filter((_, itemIndex) => itemIndex !== index);
-    const nextImageIDs = imageIDs.filter((_, itemIndex) => itemIndex !== index);
-    setImages(nextImages.length ? nextImages : ["/images/house-exterior.png"]);
-    setImageIDs(nextImageIDs);
-  }
+  function makeMainImage(index: number) {
+  const nextItems = getOrderedImageItems(images, imageIDs, index);
+  setImages(nextItems.map((item) => item.image));
+  setImageIDs(getValidImageIDs(nextItems));
+}
+
+function removeImage(index: number) {
+  const nextItems = images
+    .map((image, itemIndex) => ({ image, imageID: imageIDs[itemIndex] }))
+    .filter((_, itemIndex) => itemIndex !== index);
+
+  setImages(nextItems.length ? nextItems.map((item) => item.image) : ["/images/house-exterior.png"]);
+  setImageIDs(getValidImageIDs(nextItems));
+}
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -133,21 +158,42 @@ export function ListingForm({ mode }: { mode: "new" | "edit" }) {
         <input className="sr-only" type="file" accept="image/*" multiple onChange={onImagesChange} />
       </label>
       <div className="grid grid-cols-2 gap-3">
-        {images.map((image, index) => (
-          <div key={`${image}-${index}`} className="relative overflow-hidden rounded bg-white shadow-soft">
-            <div className="aspect-[4/3]">
-              <img src={image} alt={`Preview ${index + 1}`} className="h-full w-full object-cover" />
+        {images.map((image, index) => {
+          const isMainImage = index === 0;
+          const isPlaceholder = image === "/images/house-exterior.png";
+
+          return (
+            <div key={`${image}-${index}`} className="relative overflow-hidden rounded bg-white shadow-soft">
+              <div className="aspect-[4/3]">
+                <img src={image} alt={`Preview ${index + 1}`} className="h-full w-full object-cover" />
+              </div>
+
+              <div className="absolute left-2 top-2 rounded bg-black/70 px-2 py-1 text-xs text-white">
+                {isMainImage ? "Hoofdafbeelding" : `Slider ${index}`}
+              </div>
+
+              {!isMainImage && !isPlaceholder ? (
+                <button
+                  className="absolute bottom-2 left-2 rounded bg-yellow-400 px-2 py-1 text-xs text-black"
+                  type="button"
+                  onClick={() => makeMainImage(index)}
+                >
+                  Maak hoofd
+                </button>
+              ) : null}
+
+              {!isPlaceholder ? (
+                <button
+                  className="absolute right-2 top-2 rounded bg-red-600 px-2 py-1 text-xs text-white"
+                  type="button"
+                  onClick={() => removeImage(index)}
+                >
+                  Verwijder
+                </button>
+              ) : null}
             </div>
-            <div className="absolute left-2 top-2 rounded bg-black/70 px-2 py-1 text-xs text-white">
-              {index === 0 ? "Hoofdafbeelding" : `Slider ${index}`}
-            </div>
-            {imageIDs[index] ? (
-              <button className="absolute right-2 top-2 rounded bg-red-600 px-2 py-1 text-xs text-white" type="button" onClick={() => removeImage(index)}>
-                Verwijder
-              </button>
-            ) : null}
-          </div>
-        ))}
+          );
+        })}
       </div>
       <input className="field" name="city" defaultValue={listing?.city} placeholder="Plaats" required />
       <input className="field" name="address" defaultValue={listing?.address} placeholder={mode === "edit" ? "Adres wijzigen" : "Adres"} required />
