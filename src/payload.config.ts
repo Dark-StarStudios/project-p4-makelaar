@@ -1,34 +1,23 @@
-import { postgresAdapter } from '@payloadcms/db-postgres'
-import { lexicalEditor } from '@payloadcms/richtext-lexical'
-import path from 'path'
-import { buildConfig } from 'payload'
-import { fileURLToPath } from 'url'
-import sharp from 'sharp'
-
-import { Users } from './collections/Users'
-import { Media } from './collections/Media'
-
-const filename = fileURLToPath(import.meta.url)
-const dirname = path.dirname(filename)
+import { postgresAdapter } from "@payloadcms/db-postgres";
+import { buildConfig } from "payload";
+import { Listings } from "./payload/collections/Listings";
+import { Media } from "./payload/collections/Media";
+import { Messages } from "./payload/collections/Messages";
+import { Users } from "./payload/collections/Users";
 
 export default buildConfig({
   admin: {
-    user: Users.slug,
-    importMap: {
-      baseDir: path.resolve(dirname),
-    },
+    user: Users.slug
   },
-  collections: [Users, Media],
-  editor: lexicalEditor(),
-  secret: process.env.PAYLOAD_SECRET || '',
-  typescript: {
-    outputFile: path.resolve(dirname, 'payload-types.ts'),
+  routes: {
+    admin: "/payload",
+    api: "/api"
   },
+  collections: [Users, Listings, Media, Messages],
+  secret: process.env.PAYLOAD_SECRET || "development-secret-change-me",
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.DATABASE_URL || '',
-    },
-  }),
-  sharp,
-  plugins: [],
-})
+      connectionString: process.env.DATABASE_URI || "postgres://postgres:postgres@127.0.0.1:5432/jouw_woning"
+    }
+  })
+});
