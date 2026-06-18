@@ -36,7 +36,7 @@ export default async function WoningaanbodPage({
 
       <section className="container mt-8">
         <h2 className="section-title text-xl">
-          Woningen in {query || "Uw locatie"}
+          Zoek op {query || "Uw locatie"}
         </h2>
 
         {(query || min || max) && (
